@@ -5,6 +5,7 @@ namespace App\Controllers;
 use App\Services\TesseractService;
 use App\Services\PassportEyeService;
 use App\Services\ImageProcessingService;
+use App\Services\OcrCacheService;
 use App\Models\Document;
 use App\Utils\Response;
 use App\Utils\Validator;
@@ -16,6 +17,7 @@ class DocumentController
     private TesseractService $tesseract;
     private PassportEyeService $passportEye;
     private ImageProcessingService $imageProcessor;
+    private OcrCacheService $ocrCache;
     private Document $documentModel;
 
     public function __construct()
@@ -23,6 +25,7 @@ class DocumentController
         $this->tesseract = new TesseractService();
         $this->passportEye = new PassportEyeService();
         $this->imageProcessor = new ImageProcessingService();
+        $this->ocrCache = new OcrCacheService();
         $this->documentModel = new Document();
     }
 
@@ -87,21 +90,54 @@ class DocumentController
             $processedPath = $uploadPath . '/processed_' . $filename;
             $this->imageProcessor->preprocessImage($filepath, $processedPath);
 
-            // Choisir le moteur OCR approprié
+            // Générer le hash de l'image pour le cache
+            $imageHash = $this->ocrCache->generateImageHash($processedPath);
+
+            // Déterminer le moteur OCR à utiliser
+            $ocrEngine = ($documentType === 'passport') ? 'passporteye' : 'tesseract';
+
+            // Vérifier le cache OCR
             $ocrResult = null;
+            if ($imageHash && $this->ocrCache->has($imageHash, $ocrEngine, $language)) {
+                // Récupérer depuis le cache
+                $ocrResult = $this->ocrCache->get($imageHash, $ocrEngine, $language);
 
-            if ($documentType === 'passport') {
-                // Essayer PassportEye d'abord
-                $ocrResult = $this->passportEye->extractPassportData($processedPath);
+                Logger::info('Résultat OCR récupéré depuis le cache', [
+                    'image_hash' => substr($imageHash, 0, 8),
+                    'engine' => $ocrEngine,
+                    'cache_age_seconds' => $ocrResult['cache_age_seconds'] ?? 0
+                ]);
 
-                // Si PassportEye échoue, utiliser Tesseract en fallback
-                if (!$ocrResult['success']) {
-                    Logger::info('PassportEye échoué, utilisation de Tesseract en fallback');
+                // Extraire les données du cache
+                $ocrResult = $ocrResult['result'] ?? $ocrResult;
+            } else {
+                // Cache miss - effectuer l'OCR
+                if ($documentType === 'passport') {
+                    // Essayer PassportEye d'abord
+                    $ocrResult = $this->passportEye->extractPassportData($processedPath);
+
+                    // Si PassportEye échoue, utiliser Tesseract en fallback
+                    if (!$ocrResult['success']) {
+                        Logger::info('PassportEye échoué, utilisation de Tesseract en fallback');
+                        $ocrResult = $this->tesseract->extractText($processedPath, $language);
+                        $ocrEngine = 'tesseract'; // Mettre à jour le moteur utilisé
+                    }
+                } else {
+                    // Utiliser Tesseract pour les autres types de documents
                     $ocrResult = $this->tesseract->extractText($processedPath, $language);
                 }
-            } else {
-                // Utiliser Tesseract pour les autres types de documents
-                $ocrResult = $this->tesseract->extractText($processedPath, $language);
+
+                // Stocker le résultat dans le cache
+                if ($imageHash && $ocrResult['success']) {
+                    $cached = $this->ocrCache->set($imageHash, $ocrEngine, $ocrResult, $language);
+
+                    if ($cached) {
+                        Logger::info('Résultat OCR stocké dans le cache', [
+                            'image_hash' => substr($imageHash, 0, 8),
+                            'engine' => $ocrEngine
+                        ]);
+                    }
+                }
             }
 
             // Sauvegarder dans la base de données

@@ -6,12 +6,32 @@ use App\Utils\Logger;
 
 class ImageProcessingService
 {
+    private AutoRotationService $autoRotationService;
+
+    public function __construct()
+    {
+        $this->autoRotationService = new AutoRotationService();
+    }
+
     /**
      * Améliorer la qualité d'une image pour l'OCR
      */
     public function preprocessImage(string $inputPath, string $outputPath): bool
     {
         try {
+            // Étape 1: Auto-rotation si activée
+            if ($this->autoRotationService->isEnabled()) {
+                $rotationResult = $this->autoRotationService->detectAndRotate($inputPath);
+
+                if ($rotationResult['success'] && $rotationResult['rotated']) {
+                    Logger::info('Image auto-rotated', [
+                        'angle' => $rotationResult['rotate_angle'] ?? 0,
+                        'confidence' => $rotationResult['confidence'] ?? 0
+                    ]);
+                }
+            }
+
+            // Étape 2: Traitement d'image standard
             $imageInfo = getimagesize($inputPath);
             $mimeType = $imageInfo['mime'];
 
@@ -156,9 +176,24 @@ class ImageProcessingService
      */
     public function autoRotate(string $imagePath): bool
     {
-        // Cette fonction nécessiterait une bibliothèque plus avancée
-        // ou Tesseract avec --psm 0 pour la détection d'orientation
-        // Implémentation basique pour l'exemple
-        return true;
+        $result = $this->autoRotationService->detectAndRotate($imagePath);
+
+        if ($result['success'] && $result['rotated']) {
+            Logger::info('Auto-rotation réussie', [
+                'image' => basename($imagePath),
+                'angle' => $result['rotate_angle'] ?? 0,
+                'confidence' => $result['confidence'] ?? 0
+            ]);
+            return true;
+        }
+
+        if (!$result['success']) {
+            Logger::warning('Auto-rotation échouée', [
+                'image' => basename($imagePath),
+                'error' => $result['error'] ?? 'Unknown error'
+            ]);
+        }
+
+        return $result['success'] ?? false;
     }
 }

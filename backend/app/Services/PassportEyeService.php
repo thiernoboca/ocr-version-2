@@ -8,11 +8,13 @@ class PassportEyeService
 {
     private string $pythonPath;
     private string $scriptPath;
+    private MrzRelaxService $mrzRelaxService;
 
     public function __construct()
     {
         $this->pythonPath = $_ENV['PYTHON_PATH'] ?? '/usr/bin/python3';
         $this->scriptPath = $_ENV['PASSPORTEYE_SCRIPT_PATH'] ?? __DIR__ . '/../../scripts/passport_ocr.py';
+        $this->mrzRelaxService = new MrzRelaxService();
     }
 
     /**
@@ -46,6 +48,27 @@ class PassportEyeService
             $processingTime = round(microtime(true) - $startTime, 2);
 
             if ($result['success']) {
+                // Appliquer la correction MRZ intelligente
+                if (isset($result['data'])) {
+                    $correctionResult = $this->mrzRelaxService->correctMrzData($result['data']);
+
+                    if ($correctionResult['success']) {
+                        // Fusionner les données corrigées
+                        $result['data'] = $correctionResult['data'];
+                        $result['mrz_corrections'] = [
+                            'applied' => $correctionResult['corrections_applied'],
+                            'details' => $correctionResult['corrections_details'],
+                            'checksum_validation' => $correctionResult['checksum_validation']
+                        ];
+
+                        Logger::info('MRZ correction appliquée', [
+                            'image' => basename($imagePath),
+                            'corrections_count' => $correctionResult['corrections_applied'],
+                            'checksums_valid' => $correctionResult['checksum_validation']['valid'] ?? false
+                        ]);
+                    }
+                }
+
                 Logger::info('PassportEye OCR réussi', [
                     'image' => basename($imagePath),
                     'processing_time' => $processingTime,
