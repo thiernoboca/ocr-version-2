@@ -1,0 +1,147 @@
+.document-capture {
+  max-width: 1400px;
+  margin: 0 auto;
+  padding: 2rem;
+}
+
+.capture-header {
+  margin-bottom: 2rem;
+  text-align: center;
+}
+
+.capture-header h1 {
+  font-size: 2rem;
+  margin-bottom: 0.5rem;
+}
+
+.capture-header p {
+  color: var(--text-secondary);
+}
+
+.capture-container {
+  display: grid;
+  grid-template-columns: 2fr 1fr;
+  gap: 2rem;
+  margin-bottom: 2rem;
+}
+
+.camera-section {
+  background-color: var(--surface);
+  border-radius: 1rem;
+  padding: 1rem;
+  box-shadow: var(--shadow);
+  min-height: 500px;
+  position: relative;
+}
+
+.camera-view,
+.captured-preview {
+  width: 100%;
+  height: 100%;
+  border-radius: 0.5rem;
+  overflow: hidden;
+}
+
+.captured-preview img {
+  width: 100%;
+  height: auto;
+  display: block;
+}
+
+.detection-overlay {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  pointer-events: none;
+}
+
+.controls-section {
+  background-color: var(--surface);
+  border-radius: 1rem;
+  padding: 2rem;
+  box-shadow: var(--shadow);
+  display: flex;
+  flex-direction: column;
+  gap: 2rem;
+}
+
+.capture-buttons {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+.ocr-results {
+  background-color: var(--surface);
+  border-radius: 1rem;
+  padding: 2rem;
+  box-shadow: var(--shadow);
+}
+
+.ocr-results h2 {
+  font-size: 1.75rem;
+  margin-bottom: 1.5rem;
+}
+
+.result-info {
+  display: flex;
+  gap: 2rem;
+  margin-bottom: 2rem;
+  padding: 1rem;
+  background-color: var(--background);
+  border-radius: 0.5rem;
+}
+
+.result-info p {
+  margin: 0;
+}
+
+.extracted-text {
+  margin-top: 2rem;
+}
+
+.extracted-text h3 {
+  font-size: 1.25rem;
+  margin-bottom: 1rem;
+}
+
+.extracted-text pre {
+  background-color: var(--background);
+  padding: 1.5rem;
+  border-radius: 0.5rem;
+  overflow-x: auto;
+  white-space: pre-wrap;
+  word-wrap: break-word;
+}
+
+.passport-data {
+  margin-top: 2rem;
+}
+
+.passport-data h3 {
+  font-size: 1.25rem;
+  margin-bottom: 1rem;
+}
+
+.passport-data table {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+.passport-data td {
+  padding: 0.75rem;
+  border-bottom: 1px solid var(--border-color);
+}
+
+.passport-data td:first-child {
+  font-weight: 600;
+  width: 40%;
+}
+
+@media (max-width: 768px) {
+  .capture-container {
+    grid-template-columns: 1fr;
+  }
+}

@@ -1,0 +1,46 @@
+# PHP
+/backend/vendor/
+/backend/.env
+/backend/storage/logs/*.log
+/backend/storage/app/documents/*
+!/backend/storage/app/documents/.gitkeep
+/backend/storage/framework/cache/*
+!/backend/storage/framework/cache/.gitkeep
+/backend/composer.lock
+
+# JavaScript/Node
+/frontend/node_modules/
+/frontend/dist/
+/frontend/build/
+/frontend/.env
+/frontend/.env.local
+/frontend/package-lock.json
+/frontend/yarn.lock
+
+# IDE
+.idea/
+.vscode/
+*.swp
+*.swo
+*~
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Uploads & Temp
+uploads/
+tmp/
+temp/
+*.tmp
+
+# Logs
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# Testing
+/backend/coverage/
+/frontend/coverage/
+.phpunit.result.cache

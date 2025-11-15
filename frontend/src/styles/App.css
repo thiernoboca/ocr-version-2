@@ -1,0 +1,10 @@
+.app {
+  min-height: 100vh;
+  background-color: var(--background);
+}
+
+.app-content {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 2rem;
+}
